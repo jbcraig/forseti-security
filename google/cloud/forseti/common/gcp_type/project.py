@@ -21,6 +21,9 @@ import json
 
 from google.cloud.forseti.common.gcp_type import resource
 
+from google.cloud.forseti.common.util import logger
+LOGGER = logger.get_logger(__name__)
+
 
 class ProjectLifecycleState(resource.LifecycleState):
     """Project lifecycle state."""

@@ -35,6 +35,11 @@ from google.cloud.forseti.common.gcp_api import serviceusage
 from google.cloud.forseti.common.gcp_api import stackdriver_logging
 from google.cloud.forseti.common.gcp_api import storage
 
+import re
+from google.cloud.forseti.common.util import logger
+LOGGER = logger.get_logger(__name__)
+
+
 
 class AssetMetadata(object):
     """Asset Metadata."""
@@ -2371,7 +2376,11 @@ class ApiClientImpl(ApiClient):
         """
         result = self.ad.get_groups(gsuite_id)
         for group in result:
-            yield group, None
+            if re.match(r"^(?:iam_gcp|gg)_", group['email']):
+                LOGGER.info('Matching group %s', group['email'])
+                yield group, None
+            else:
+                LOGGER.info('Skipping group %s', group['email'])
 
     @create_lazy('groups_settings', _create_groups_settings)
     def fetch_gsuite_groups_settings(self, group_email):

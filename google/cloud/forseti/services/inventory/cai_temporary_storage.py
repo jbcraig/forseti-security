@@ -32,6 +32,7 @@ from google.cloud.forseti.common.util import logger
 from google.cloud.forseti.services.dao import create_engine
 from google.cloud.forseti.services.inventory.base.gcp import AssetMetadata
 
+import re
 LOGGER = logger.get_logger(__name__)
 BASE = declarative_base()
 
@@ -97,6 +98,16 @@ class CaiTemporaryStore(BASE):
             dict: database row dictionary or None if there is no data.
         """
         asset = json.loads(asset_json)
+
+        try:
+            if ( asset['asset_type'] == 'cloudresourcemanager.googleapis.com/Project' and
+                    'resource' in asset and re.match(r"^sys-[0-9]*",
+                    asset['resource']['data']['projectId']) ):
+                LOGGER.info('Skipping anonymous appscript system project %s.', asset['resource']['data']['projectId'])
+                return None
+        except Exception as e:
+            LOGGER.exception('Error testing projectID (%s): %s', e, asset)
+
         if len(asset['name']) > 2048:
             LOGGER.warning('Skipping insert of asset %s, name too long.',
                            asset['name'])
